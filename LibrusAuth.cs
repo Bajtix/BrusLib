@@ -8,7 +8,16 @@ using Newtonsoft.Json;
 
 namespace BrusLib {
     public static class LibrusAuth {
-        
+        public class AuthEvent {
+            public string message;
+            public Exception e;
+            public DateTime occured;
+            public AuthEvent(string message, Exception e, DateTime occured) {
+                this.message = message;
+                this.e = e;
+                this.occured = occured;
+            }
+        }
         /// <summary>
         /// Sets the common headers for all web requests
         /// </summary>
@@ -37,7 +46,7 @@ namespace BrusLib {
             var wr = WebRequest.CreateHttp(url);
             wr.CookieContainer = cookies;
             
-            if(referer != "") wr.Headers.Add(HttpRequestHeader.Referer, referer);
+            if(referer != "") wr.Referer = referer;
             if(setDefaultHeaders) SetDefaultHeaders(ref wr);
             return wr;
         }
@@ -50,7 +59,7 @@ namespace BrusLib {
             StreamReader sr = new StreamReader(r.GetResponseStream());
             string o = sr.ReadToEnd();
             sr.Close();
-            File.WriteAllText("latest_request.txt", o);
+            //File.WriteAllText("latest_request.txt", o);
             return o;
         }
 
@@ -102,7 +111,7 @@ namespace BrusLib {
         /// <param name="username">Username</param>
         /// <param name="password">Password</param>
         /// <returns>Connection session with all the cookies set etc.</returns>
-        public static async Task<LibrusConnection> Authenticate(string username, string password, bool verbose = false) {
+        public static async Task<LibrusConnection> Authenticate(string username, string password, EventHandler<AuthEvent> eventHandler) {
             LibrusConnection connection = new LibrusConnection(username, new CookieContainer());
 
             HttpWebRequest request;
@@ -111,61 +120,117 @@ namespace BrusLib {
             
             // Step 1
             // gets the iframe code
-            request = GetRequest("https://portal.librus.pl/rodzina/synergia/loguj", ref connection.cookieSession, true, "https://portal.librus.pl/rodzina");
-            response = request.GetResponse();
+            try {
+                request = GetRequest("https://portal.librus.pl/rodzina/synergia/loguj", ref connection.cookieSession,
+                    true, "https://portal.librus.pl/rodzina");
+                response = request.GetResponse();
+            }
+            catch (Exception e) {
+                eventHandler.Invoke(null, new AuthEvent("Step 1 Failed", e, DateTime.Now));
+                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+            }
+
+            eventHandler.Invoke(null, new AuthEvent("Step 1 : Get iframe code", null, DateTime.Now));
+
+
             
-            if(verbose) Console.WriteLine("Step 1 : Get iframe code");
             
             // Step 2
-            // gets us the Auth Referer url
+            // gets us the Auth Referer url and go there
             string iframeCode = GetIframeCode(GetResponseBody(response));
-            request = GetRequest(iframeCode, ref connection.cookieSession, true, "https://portal.librus.pl/rodzina");
-            response = request.GetResponse();
-            referer = response.ResponseUri.ToString();
+            try {
+                request = GetRequest(iframeCode, ref connection.cookieSession, true,
+                    "https://portal.librus.pl/rodzina");
+                response = request.GetResponse();
+                referer = response.ResponseUri.ToString();
+            }
+            catch (Exception e) {
+                eventHandler.Invoke(null, new AuthEvent("Step 2 Failed", e, DateTime.Now));
+                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+            }
+
+            eventHandler.Invoke(null, new AuthEvent("Step 2 : Get auth referer url", null, DateTime.Now));
+
             
-            if(verbose) Console.WriteLine("Step 2 : Get auth referer url");
             
             // Step 3
             // Greet the captcha (the system they use is kinda dumb - to trick it, we first send an empty username and then a filled one)
-            request = GetRequest("https://api.librus.pl/OAuth/Captcha", ref connection.cookieSession, true, referer);
-            MakePostRequest(ref request, "username=&is_needed=1");
-            response = request.GetResponse();
+            try {
+                request = GetRequest("https://api.librus.pl/OAuth/Captcha", ref connection.cookieSession, true,
+                    referer);
+                MakePostRequest(ref request, "username=&is_needed=1");
+                response = request.GetResponse();
+            }
+            catch (Exception e) {
+                eventHandler.Invoke(null, new AuthEvent("Step 3 Failed", e, DateTime.Now));
+                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+            }
+
+            eventHandler.Invoke(null, new AuthEvent("Step 3 : Greet the captcha", null, DateTime.Now));
+
             
-            if(verbose) Console.WriteLine("Step 3 : Greet the captcha");
             
             // We need to wait here (i think, sometimes it wouldn't work otherwise, which makes sense - a user wouldn't type his password in just a few ms)
             await Task.Delay(500);
             
             // Step 4
             // Feed the captcha
-            request = GetRequest("https://api.librus.pl/OAuth/Captcha", ref connection.cookieSession, true, referer);
-            MakePostRequest(ref request, $"username={username}&is_needed=1");
-            response = request.GetResponse();
-            
-            if(verbose) Console.WriteLine("Step 4 : Feed the captcha");
-            
+            try {
+                request = GetRequest("https://api.librus.pl/OAuth/Captcha", ref connection.cookieSession, true,
+                    referer);
+                MakePostRequest(ref request, $"username={username}&is_needed=1");
+                response = request.GetResponse();
+            }
+            catch (Exception e) {
+                eventHandler.Invoke(null, new AuthEvent("Step 4 Failed", e, DateTime.Now));
+                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+            }
+
+            eventHandler.Invoke(null, new AuthEvent("Step 4 : Feed the captcha", null, DateTime.Now));
+
+
             await Task.Delay(500);
             
             // Step 5
             // finally, we send the credentials. This will get us some json - we care about the status part (check if its 'ok')
-            request = GetRequest(referer, ref connection.cookieSession, true, referer);
-            MakePostRequest(ref request, $"action=login&login={username}&pass={password}");
-            response = request.GetResponse();
-            
-            if(verbose) Console.WriteLine("Step 5 : Send Credentials");
-            
+
+            try {
+                request = GetRequest(referer, ref connection.cookieSession, true, referer);
+                MakePostRequest(ref request, $"action=login&login={username}&pass={password}");
+                response = request.GetResponse();
+            }
+            catch (Exception e) {
+                eventHandler.Invoke(null, new AuthEvent("Step 5 Failed", e, DateTime.Now));
+                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+            }
+
+            eventHandler.Invoke(null, new AuthEvent("Step 5 : Send credentials", null, DateTime.Now));
+
+
             string _ = GetResponseBody(response);
-            if (!IsResponseOk(_)) throw new Exception("Credentials error: " + _);
+            if (!IsResponseOk(_)) {
+                eventHandler.Invoke(null, new AuthEvent("Step 5 Verification Failed", new Exception($"Server told us to fuck off. Response: {_}"), DateTime.Now));
+                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+            }
 
             // Step 6
             // Now the server will send us some json back. We just have to follow to the next page
-            request = GetRequest(
-                referer.Replace("Authorization", "Authorization/Grant"), 
-                ref connection.cookieSession, true, referer);
-            response = request.GetResponse();
-            
-            if(verbose)  Console.WriteLine("Step 6 : Got full access!");
-            
+            try {
+                request = GetRequest(
+                    referer.Replace("Authorization", "Authorization/Grant"),
+                    ref connection.cookieSession, true, referer);
+                response = request.GetResponse();
+            }
+            catch (Exception e) {
+                eventHandler.Invoke(null, new AuthEvent("Step 6 Failed", e, DateTime.Now));
+                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+            }
+
+            eventHandler.Invoke(null, new AuthEvent("Step 6 : Login successful", null, DateTime.Now));
+
+
+
+
 
             return connection;
         }

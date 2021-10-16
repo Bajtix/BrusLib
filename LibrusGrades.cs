@@ -45,9 +45,9 @@ namespace BrusLib {
             foreach (var item in grades) {
                 if(item.InnerText.Trim() == String.Empty) continue;
                 gs.Add(new Grade(
-                    item.InnerText, 
-                    ColorFromStyle(item.ParentNode.GetAttributeValue("style", "background-color: rgb(255,0,255);")), 
-                    item.GetAttributeValue("title","Error Fetching")));
+                    item.InnerText,
+                    ColorFromStyle(item.ParentNode.GetAttributeValue("style", "background-color: rgb(255,0,255);")),
+                    Util.DeHtmlify(item.GetAttributeValue("title","Error Fetching"))));
             }
 
             return gs.ToArray();

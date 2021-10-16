@@ -3,11 +3,12 @@ using System.Drawing;
 
 namespace BrusLib {
     public struct Grade {
-        public readonly string grade;
-        public readonly Color color;
-        public readonly string comment, category;
-        public readonly DateTime addDate;
-        public readonly bool accountsIntoFinal;
+        public string grade { get; set;}
+        public Color color { get; set;}
+        public string category { get; set;}
+        public string comment { get; set;  }
+        public DateTime addDate { get; set;  }
+        public bool accountsIntoFinal { get; set;  }
         
         public Grade(string grade, Color color, string meta) {
             this.grade = grade;
@@ -23,7 +24,7 @@ namespace BrusLib {
             string cat = "", com = "No comment";
             DateTime dat = DateTime.MinValue;
             bool cnt = false;
-            meta.Replace("<br>", "\n");
+            meta = meta.Replace("<br>", "\n");
             string[] lines = meta.Split('\n');
             foreach (var item in lines) {
                 string key = item.Split(':')[0].ToLower().Trim();

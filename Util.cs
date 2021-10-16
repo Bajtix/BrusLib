@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace BrusLib {
     public class Util {
@@ -16,6 +17,12 @@ namespace BrusLib {
         public static string Fetch(string url, ref CookieContainer cookies, string referer) {
             var request = LibrusAuth.GetRequest(url, ref cookies, true, referer);
             return LibrusAuth.GetResponseBody(request.GetResponse());
+        }
+
+        public static string DeHtmlify(string h) {
+            h = h.Replace("&nbsp;", " ");
+            h = h.Replace("&nbsp", " ");
+            return HttpUtility.HtmlDecode(h);
         }
     }
 }

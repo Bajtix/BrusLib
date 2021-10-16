@@ -1,0 +1,10 @@
+C:\Users\bajti\RiderProjects\BrusLib\obj\Debug\netstandard2.0\BrusLib.csproj.AssemblyReference.cache
+C:\Users\bajti\RiderProjects\BrusLib\obj\Debug\netstandard2.0\BrusLib.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\bajti\RiderProjects\BrusLib\obj\Debug\netstandard2.0\BrusLib.AssemblyInfoInputs.cache
+C:\Users\bajti\RiderProjects\BrusLib\obj\Debug\netstandard2.0\BrusLib.AssemblyInfo.cs
+C:\Users\bajti\RiderProjects\BrusLib\obj\Debug\netstandard2.0\BrusLib.csproj.CoreCompileInputs.cache
+C:\Users\bajti\RiderProjects\BrusLib\bin\Debug\netstandard2.0\BrusLib.deps.json
+C:\Users\bajti\RiderProjects\BrusLib\bin\Debug\netstandard2.0\BrusLib.dll
+C:\Users\bajti\RiderProjects\BrusLib\bin\Debug\netstandard2.0\BrusLib.pdb
+C:\Users\bajti\RiderProjects\BrusLib\obj\Debug\netstandard2.0\BrusLib.dll
+C:\Users\bajti\RiderProjects\BrusLib\obj\Debug\netstandard2.0\BrusLib.pdb
