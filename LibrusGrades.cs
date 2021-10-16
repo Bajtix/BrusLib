@@ -45,7 +45,7 @@ namespace BrusLib {
                 if(item.InnerText.Trim() == String.Empty) continue;
                 gs.Add(new Grade(
                     item.InnerText, 
-                    ColorFromStyle(item.GetAttributeValue("style", "background-color: rgb(0,0,0);")), 
+                    ColorFromStyle(item.ParentNode.GetAttributeValue("style", "background-color: rgb(255,0,255);")), 
                     item.GetAttributeValue("title","Error Fetching")));
             }
 
@@ -53,7 +53,13 @@ namespace BrusLib {
         }
         
         private static Color ColorFromStyle(string style) {
-            return Color.White; // TODO: implement
+            /*style = style.Substring(style.IndexOf("(") + 1, style.IndexOf(")") - style.IndexOf("(") - 1);
+            
+            var w = style.Split(',');
+            
+            return Color.FromArgb(int.Parse(w[0]),int.Parse(w[1]),int.Parse(w[2])); // TODO: implement*/
+
+            return ColorTranslator.FromHtml(style.Split(':')[1].Replace(";","").Trim());
         }
         
         

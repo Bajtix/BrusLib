@@ -12,5 +12,9 @@ namespace BrusLib {
             this.cookieSession = cookieSession;
             this.creationDate = DateTime.Now;
         }
+
+        public bool IsAlive() {
+            return (creationDate - DateTime.Now).Minutes < 10;
+        }
     }
 }

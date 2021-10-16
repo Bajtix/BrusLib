@@ -4,7 +4,7 @@ using System.Drawing;
 namespace BrusLib {
     public struct Grade {
         public readonly string grade;
-        private readonly Color color;
+        public readonly Color color;
         public readonly string comment, category;
         public readonly DateTime addDate;
         public readonly bool accountsIntoFinal;

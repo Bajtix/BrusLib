@@ -102,7 +102,7 @@ namespace BrusLib {
         /// <param name="username">Username</param>
         /// <param name="password">Password</param>
         /// <returns>Connection session with all the cookies set etc.</returns>
-        public static async Task<LibrusConnection> Authenticate(string username, string password) {
+        public static async Task<LibrusConnection> Authenticate(string username, string password, bool verbose = false) {
             LibrusConnection connection = new LibrusConnection(username, new CookieContainer());
 
             HttpWebRequest request;
@@ -114,7 +114,7 @@ namespace BrusLib {
             request = GetRequest("https://portal.librus.pl/rodzina/synergia/loguj", ref connection.cookieSession, true, "https://portal.librus.pl/rodzina");
             response = request.GetResponse();
             
-            Console.WriteLine("Step 1 : Get iframe code");
+            if(verbose) Console.WriteLine("Step 1 : Get iframe code");
             
             // Step 2
             // gets us the Auth Referer url
@@ -123,7 +123,7 @@ namespace BrusLib {
             response = request.GetResponse();
             referer = response.ResponseUri.ToString();
             
-            Console.WriteLine("Step 2 : Get auth referer url");
+            if(verbose) Console.WriteLine("Step 2 : Get auth referer url");
             
             // Step 3
             // Greet the captcha (the system they use is kinda dumb - to trick it, we first send an empty username and then a filled one)
@@ -131,7 +131,7 @@ namespace BrusLib {
             MakePostRequest(ref request, "username=&is_needed=1");
             response = request.GetResponse();
             
-            Console.WriteLine("Step 3 : Greet the captcha");
+            if(verbose) Console.WriteLine("Step 3 : Greet the captcha");
             
             // We need to wait here (i think, sometimes it wouldn't work otherwise, which makes sense - a user wouldn't type his password in just a few ms)
             await Task.Delay(500);
@@ -142,7 +142,7 @@ namespace BrusLib {
             MakePostRequest(ref request, $"username={username}&is_needed=1");
             response = request.GetResponse();
             
-            Console.WriteLine("Step 4 : Feed the captcha");
+            if(verbose) Console.WriteLine("Step 4 : Feed the captcha");
             
             await Task.Delay(500);
             
@@ -152,7 +152,7 @@ namespace BrusLib {
             MakePostRequest(ref request, $"action=login&login={username}&pass={password}");
             response = request.GetResponse();
             
-            Console.WriteLine("Step 5 : Send Credentials");
+            if(verbose) Console.WriteLine("Step 5 : Send Credentials");
             
             string _ = GetResponseBody(response);
             if (!IsResponseOk(_)) throw new Exception("Credentials error: " + _);
@@ -164,7 +164,7 @@ namespace BrusLib {
                 ref connection.cookieSession, true, referer);
             response = request.GetResponse();
             
-            Console.WriteLine("Step 6 : Got full access!");
+            if(verbose)  Console.WriteLine("Step 6 : Got full access!");
             
 
             return connection;
