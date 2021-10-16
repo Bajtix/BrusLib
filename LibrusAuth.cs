@@ -47,7 +47,7 @@ namespace BrusLib {
         /// </summary>
         /// <returns>Response Content</returns>
         public static string GetResponseBody(WebResponse r) {
-            StreamReader sr = new StreamReader(r.GetResponseStream()!);
+            StreamReader sr = new StreamReader(r.GetResponseStream());
             string o = sr.ReadToEnd();
             sr.Close();
             File.WriteAllText("latest_request.txt", o);
@@ -88,8 +88,8 @@ namespace BrusLib {
         /// Checks if the server response is OK in step 5
         /// </summary>
         private static bool IsResponseOk(string response) {
-            string status = JsonConvert.DeserializeObject<dynamic>(response)?.status;
-            status ??= "null status";
+            string status = response; // better to do json convert
+            if (status == null) status = "null status";
             
             if (status.Contains("ok")) return true;
             Console.WriteLine($"Error while verifying response. It's not ok - got {status}");

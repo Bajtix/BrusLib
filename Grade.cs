@@ -23,8 +23,8 @@ namespace BrusLib {
             string cat = "", com = "No comment";
             DateTime dat = DateTime.MinValue;
             bool cnt = false;
-            
-            string[] lines = meta.Split("<br>");
+            meta.Replace("<br>", "\n");
+            string[] lines = meta.Split('\n');
             foreach (var item in lines) {
                 string key = item.Split(':')[0].ToLower().Trim();
                 string val = item.Split(':')[1].Trim();

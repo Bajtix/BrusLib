@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
@@ -40,7 +41,7 @@ namespace BrusLib {
             var grades = tableRow.SelectNodes(".//a[@class=\"ocena\"]");
             if(grades == null || grades.Count == 0) return Array.Empty<Grade>();
 
-            List<Grade> gs = new();
+            List<Grade> gs = new List<Grade>();
             foreach (var item in grades) {
                 if(item.InnerText.Trim() == String.Empty) continue;
                 gs.Add(new Grade(
@@ -59,9 +60,20 @@ namespace BrusLib {
             
             return Color.FromArgb(int.Parse(w[0]),int.Parse(w[1]),int.Parse(w[2])); // TODO: implement*/
 
-            return ColorTranslator.FromHtml(style.Split(':')[1].Replace(";","").Trim());
+            return ColorFromHex(style.Split(':')[1].Replace(";","").Trim());
         }
-        
-        
+
+        private static Color ColorFromHex(string hex) {
+            hex = hex.Substring(1);
+            string rs = hex.Substring(0, 2);
+            string gs = hex.Substring(2, 2);
+            string bs = hex.Substring(4, 2);
+
+            int r = int.Parse(rs, NumberStyles.HexNumber);
+            int g = int.Parse(gs, NumberStyles.HexNumber);
+            int b = int.Parse(bs, NumberStyles.HexNumber);
+
+            return Color.FromArgb(r, g, b);
+        }
     }
 }

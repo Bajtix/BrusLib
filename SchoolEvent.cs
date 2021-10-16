@@ -26,7 +26,7 @@ namespace BrusLib {
             string[] lines = shit.Split(new string[] {"<br>", "br /&gt"}, StringSplitOptions.None);
 
             foreach (string line in lines) {
-                if (line.Contains(':') || line.Contains('>')) {
+                if (line.Contains(":") || line.Contains(">")) {
                     string key = line.Split(':','>')[0].Trim();
                     string value = line.Split(':', '>')[1].Trim();
                     result.Add(key,value);
