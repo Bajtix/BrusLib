@@ -27,6 +27,7 @@ namespace BrusLib {
             meta = meta.Replace("<br>", "\n");
             string[] lines = meta.Split('\n');
             foreach (var item in lines) {
+                if(!item.Contains(":")) continue; // temporary fix. We should account for grades that have a \n
                 string key = item.Split(':')[0].ToLower().Trim();
                 string val = item.Split(':')[1].Trim();
                 switch (key) {
