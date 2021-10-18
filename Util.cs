@@ -7,6 +7,8 @@ using System.Web;
 namespace BrusLib {
     public static class Util {
         public const string SYNERGIA_INDEX = "https://synergia.librus.pl/uczen/index";
+
+        public static string Cfg_BufferLocation;
         
         //TODO: move generic LibrusAuth methods here, to the util class
 
