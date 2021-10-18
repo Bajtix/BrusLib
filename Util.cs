@@ -1,9 +1,11 @@
-﻿using System.Net;
+﻿using System;
+using System.Globalization;
+using System.Net;
 using System.Threading.Tasks;
 using System.Web;
 
 namespace BrusLib {
-    public class Util {
+    public static class Util {
         public const string SYNERGIA_INDEX = "https://synergia.librus.pl/uczen/index";
         
         //TODO: move generic LibrusAuth methods here, to the util class
@@ -23,6 +25,15 @@ namespace BrusLib {
             h = h.Replace("&nbsp;", " ");
             h = h.Replace("&nbsp", " ");
             return HttpUtility.HtmlDecode(h);
+        }
+        
+        public static DateTime GetFirstDayOfWeek(DateTime dayInWeek, CultureInfo cultureInfo) {
+            DayOfWeek firstDay = cultureInfo.DateTimeFormat.FirstDayOfWeek;
+            DateTime firstDayInWeek = dayInWeek.Date;
+            while (firstDayInWeek.DayOfWeek != firstDay)
+                firstDayInWeek = firstDayInWeek.AddDays(-1);
+
+            return firstDayInWeek;
         }
     }
 }

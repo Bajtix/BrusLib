@@ -21,7 +21,7 @@ namespace BrusLib {
         }
 
         private static (string cat, string com, DateTime dat, bool cnt) ParseMeta(string meta) {
-            string cat = "", com = "No comment";
+            string cat = "", com = "";
             DateTime dat = DateTime.MinValue;
             bool cnt = false;
             meta = meta.Replace("<br>", "\n");

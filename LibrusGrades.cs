@@ -31,8 +31,8 @@ namespace BrusLib {
             
             return new LibrusGrades(subjects, DateTime.Now);
         }
-        
-        protected LibrusGrades(List<Subject> subjects, DateTime lastFetched) {
+
+        private LibrusGrades(List<Subject> subjects, DateTime lastFetched) {
             this.subjects = subjects;
             this.lastFetched = lastFetched;
         }
@@ -58,7 +58,7 @@ namespace BrusLib {
             
             var w = style.Split(',');
             
-            return Color.FromArgb(int.Parse(w[0]),int.Parse(w[1]),int.Parse(w[2])); // TODO: implement*/
+            return Color.FromArgb(int.Parse(w[0]),int.Parse(w[1]),int.Parse(w[2]));*/
 
             return ColorFromHex(style.Split(':')[1].Replace(";","").Trim());
         }
