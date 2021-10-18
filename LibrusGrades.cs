@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
@@ -10,10 +11,30 @@ namespace BrusLib {
     public class LibrusGrades {
         public readonly List<Subject> subjects;
         public readonly DateTime lastFetched;
+        private const string requestUrl = "https://synergia.librus.pl/przegladaj_oceny/uczen";
 
-        public static async Task<LibrusGrades> Retrieve(LibrusConnection connection) {
-            string html = await Util.FetchAsync("https://synergia.librus.pl/przegladaj_oceny/uczen", connection.cookieSession,
-                Util.SYNERGIA_INDEX);
+        public static async Task<LibrusGrades> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none) {
+            string html = "";
+
+            switch (bufferMode) {
+                case APIBufferMode.none:
+                    html = await Util.FetchAsync(requestUrl, connection.cookieSession,
+                        Util.SYNERGIA_INDEX);
+                    break;
+                case APIBufferMode.load:
+                    if (File.Exists("buffer_grades")) {
+                        html = File.ReadAllText("buffer_grades");
+                        break;
+                    }
+                    else
+                        goto case APIBufferMode.save;
+
+                case APIBufferMode.save:
+                    html = await Util.FetchAsync(requestUrl, connection.cookieSession,
+                        Util.SYNERGIA_INDEX);
+                    File.WriteAllText("buffer_grades", html);
+                    break;
+            }
             
             var doc = new HtmlDocument();
             doc.LoadHtml(html);

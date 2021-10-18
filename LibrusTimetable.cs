@@ -15,18 +15,30 @@ namespace BrusLib {
 
         public SchoolDay[] week;
 
+        private const string requestUrl = "https://synergia.librus.pl/przegladaj_plan_lekcji";
 
         public LibrusTimetable(List<TimePeriod> timePeriods, SchoolDay[] week) {
             this.timePeriods = timePeriods;
             this.week = week;
         }
 
-        public static async Task<LibrusTimetable> Retrieve(LibrusConnection connection) {
-            string html = await Util.FetchAsync("https://synergia.librus.pl/przegladaj_plan_lekcji", connection.cookieSession,
-                Util.SYNERGIA_INDEX);
-            
-            //File.WriteAllText("plan req.html",html);
-            //html = File.ReadAllText("plan req.html");
+        public static async Task<LibrusTimetable> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none) {
+            string html = "";
+
+            switch (bufferMode) {
+                case APIBufferMode.none:
+                    html = await Util.FetchAsync(requestUrl, connection.cookieSession,
+                        Util.SYNERGIA_INDEX);
+                    break;
+                case APIBufferMode.load:
+                    html = File.ReadAllText("buffer_tt");
+                    break;
+                case APIBufferMode.save:
+                    html = await Util.FetchAsync(requestUrl, connection.cookieSession,
+                        Util.SYNERGIA_INDEX);
+                    File.WriteAllText("buffer_tt", html);
+                    break;
+            }
             
             var doc = new HtmlDocument();
             doc.LoadHtml(html);

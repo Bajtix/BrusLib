@@ -112,7 +112,7 @@ namespace BrusLib {
         /// <param name="password">Password</param>
         /// <returns>Connection session with all the cookies set etc.</returns>
         public static async Task<LibrusConnection> Authenticate(string username, string password, EventHandler<AuthEvent> eventHandler) {
-            LibrusConnection connection = new LibrusConnection(username, new CookieContainer());
+            LibrusConnection connection = new LibrusConnection(username, password, new CookieContainer());
 
             HttpWebRequest request;
             WebResponse response;
@@ -127,7 +127,7 @@ namespace BrusLib {
             }
             catch (Exception e) {
                 eventHandler.Invoke(null, new AuthEvent("Step 1 Failed", e, DateTime.Now));
-                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+                return new LibrusConnection("EXCEPTION_FAILED","EXCEPTION_FAILED", null, false);
             }
 
             eventHandler.Invoke(null, new AuthEvent("Step 1 : Get iframe code", null, DateTime.Now));
@@ -146,7 +146,7 @@ namespace BrusLib {
             }
             catch (Exception e) {
                 eventHandler.Invoke(null, new AuthEvent("Step 2 Failed", e, DateTime.Now));
-                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+                return new LibrusConnection("EXCEPTION_FAILED","EXCEPTION_FAILED", null, false);
             }
 
             eventHandler.Invoke(null, new AuthEvent("Step 2 : Get auth referer url", null, DateTime.Now));
@@ -163,7 +163,7 @@ namespace BrusLib {
             }
             catch (Exception e) {
                 eventHandler.Invoke(null, new AuthEvent("Step 3 Failed", e, DateTime.Now));
-                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+                return new LibrusConnection("EXCEPTION_FAILED","EXCEPTION_FAILED", null, false);
             }
 
             eventHandler.Invoke(null, new AuthEvent("Step 3 : Greet the captcha", null, DateTime.Now));
@@ -183,7 +183,7 @@ namespace BrusLib {
             }
             catch (Exception e) {
                 eventHandler.Invoke(null, new AuthEvent("Step 4 Failed", e, DateTime.Now));
-                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+                return new LibrusConnection("EXCEPTION_FAILED","EXCEPTION_FAILED", null, false);
             }
 
             eventHandler.Invoke(null, new AuthEvent("Step 4 : Feed the captcha", null, DateTime.Now));
@@ -201,7 +201,7 @@ namespace BrusLib {
             }
             catch (Exception e) {
                 eventHandler.Invoke(null, new AuthEvent("Step 5 Failed", e, DateTime.Now));
-                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+                return new LibrusConnection("EXCEPTION_FAILED","EXCEPTION_FAILED", null, false);
             }
 
             eventHandler.Invoke(null, new AuthEvent("Step 5 : Send credentials", null, DateTime.Now));
@@ -210,7 +210,7 @@ namespace BrusLib {
             string _ = GetResponseBody(response);
             if (!IsResponseOk(_)) {
                 eventHandler.Invoke(null, new AuthEvent("Step 5 Verification Failed", new Exception($"Server told us to fuck off. Response: {_}"), DateTime.Now));
-                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+                return new LibrusConnection("EXCEPTION_FAILED","EXCEPTION_FAILED", null, false);
             }
 
             // Step 6
@@ -223,7 +223,7 @@ namespace BrusLib {
             }
             catch (Exception e) {
                 eventHandler.Invoke(null, new AuthEvent("Step 6 Failed", e, DateTime.Now));
-                return new LibrusConnection("EXCEPTION_FAILED", null, false);
+                return new LibrusConnection("EXCEPTION_FAILED", "EXCEPTION_FAILED", null, false);
             }
 
             eventHandler.Invoke(null, new AuthEvent("Step 6 : Login successful", null, DateTime.Now));
