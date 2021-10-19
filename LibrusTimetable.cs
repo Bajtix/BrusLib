@@ -22,7 +22,7 @@ namespace BrusLib {
             this.week = week;
         }
 
-        public static async Task<LibrusTimetable> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none) {
+        public static async Task<LibrusTimetable> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none) { // TODO: this code is unmanageable. Please, rewrite it.
             string html = "";
 
             switch (bufferMode) {
@@ -31,8 +31,12 @@ namespace BrusLib {
                         Util.SYNERGIA_INDEX);
                     break;
                 case APIBufferMode.load:
-                    html = File.ReadAllText("buffer_tt");
-                    break;
+                    if (File.Exists("buffer_tt")) {
+                        html = File.ReadAllText("buffer_tt");
+                        break;
+                    }
+                    else
+                        goto case APIBufferMode.save;
                 case APIBufferMode.save:
                     html = await Util.FetchAsync(requestUrl, connection.cookieSession,
                         Util.SYNERGIA_INDEX);
@@ -55,36 +59,37 @@ namespace BrusLib {
             int unknownCounter = 0; // counts unknown periods (breaks and other ones possibly)
 
             foreach (var item in rows) {
-                var hr_node = item.SelectSingleNode("./*[2]");
-                string hr_text = Util.DeHtmlify(hr_node.InnerText);
-                var id_node = item.SelectSingleNode("./*[1]");
-                string id_text = id_node.InnerText.Trim();
+                var hrNode = item.SelectSingleNode("./*[2]");
+                string hrText = Util.DeHtmlify(hrNode.InnerText);
+                var idNode = item.SelectSingleNode("./*[1]");
+                string idText = idNode.InnerText.Trim();
 
-                string s_hr = hr_text.Split('-')[0].Trim();
-                string e_hr = hr_text.Split('-')[1].Trim();
+                string sHr = hrText.Split('-')[0].Trim();
+                string eHr = hrText.Split('-')[1].Trim();
 
-                var s_date = DateTime.Parse(s_hr);
-                var e_date = DateTime.Parse(e_hr);
+                var sDate = DateTime.Parse(sHr);
+                var eDate = DateTime.Parse(eHr);
 
-                if (id_text == "") {
-                    timePeriods.Add(new TimePeriod(s_date, e_date, -unknownCounter));
+                if (idText == "") {
+                    timePeriods.Add(new TimePeriod(sDate, eDate, -unknownCounter));
                     unknownCounter++;
                     continue;
                 }
 
-                timePeriods.Add(new TimePeriod(s_date, e_date, int.Parse(id_text)));
+                timePeriods.Add(new TimePeriod(sDate, eDate, int.Parse(idText)));
 
 
-                string snw = "";
+                string snw = ""; // TODO: please, rewrite this nicely
                 for (int i = 0; i < 7; i++) {
                     DateTime day = Util.GetFirstDayOfWeek(DateTime.Today, CultureInfo.InvariantCulture).AddDays(i);
+                    
                     if (week[i] == null) week[i] = new List<Lesson>();
                     var nnn = item.SelectNodes("./*")[i + 2];
                     snw = nnn.InnerText;
                     snw = Util.DeHtmlify(snw);
                     bool rep = snw.ToLower().Contains("zastępstwo");
                     bool can = snw.ToLower().Contains("odwołane");
-                    //snw = snw.Replace("\n","").Replace("<br>", "\n").Trim();
+                    
                     var starthour = timePeriods.Last().start;
                     var endhour = timePeriods.Last().end;
                     if (snw == " " || snw == "") {
@@ -94,9 +99,11 @@ namespace BrusLib {
 
                     string tc = snw.Substring(snw.IndexOf('-') + 1, snw.Length - snw.IndexOf('-') - 1);
                     
-                    DateTime start_exact = day.AddHours(starthour.Hour).AddMinutes(starthour.Minute);
-                    DateTime end_exact = day.AddHours(endhour.Hour).AddMinutes(endhour.Minute);
-                    week[i].Add(new Lesson(Util.DeHtmlify(nnn.SelectSingleNode(".//b").InnerText.Trim()).Replace("\n",""), tc, rep, can, start_exact, end_exact,
+                    DateTime startDateTime = day.AddHours(starthour.Hour).AddMinutes(starthour.Minute);
+                    DateTime endDateTime = day.AddHours(endhour.Hour).AddMinutes(endhour.Minute);
+                    week[i].Add(new Lesson(
+                        Util.DeHtmlify(nnn.SelectSingleNode(".//b").InnerText.Trim()).Replace("\n",""), 
+                        tc.Trim(), rep, can, startDateTime, endDateTime,
                         timePeriods.Last().mark));
                 }
 

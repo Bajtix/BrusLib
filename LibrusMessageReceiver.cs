@@ -15,7 +15,7 @@ namespace BrusLib {
             this.messages = messages;
         }
 
-        public static async Task<LibrusMessageReceiver> Retrieve(LibrusConnection connection, APIBufferMode bufferMode) {
+        public static async Task<LibrusMessageReceiver> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none) {
             string html = "";
 
             switch (bufferMode) {
@@ -58,7 +58,8 @@ namespace BrusLib {
                 
                 //Console.WriteLine($"{messageTime.InnerText} | {messageAuthor.InnerText} | {messageTitle.InnerText} |");
                 messages.Add(new LibrusMessage(messageAuthor.InnerText.Trim(),
-                    messageTitle.InnerText, messageTime.InnerText.Trim(),
+                    messageTitle.InnerText.Trim(), 
+                    messageTime.InnerText.Trim(),
                     "https://synergia.librus.pl" + Util.DeHtmlify(messageTitle.SelectSingleNode("./a").GetAttributeValue("href",""))
                 ));
             }
