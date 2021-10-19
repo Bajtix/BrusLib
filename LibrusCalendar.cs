@@ -39,12 +39,15 @@ namespace BrusLib {
 
             foreach (var d in days) {
                 var date = d.SelectSingleNode("./div[@class=\"kalendarz-numer-dnia\"]");
-                var events = d.SelectNodes(".//tr");
+                var events = d.SelectNodes(".//td");
 
                 Console.WriteLine(date.InnerText + "-----------------");
                 if(events == null) continue;
                 foreach (var e in events) {
-                    Console.WriteLine(e.InnerText.Trim());
+                    //Console.WriteLine(e.InnerHtml);
+                    if (e.GetAttributeValue("onclick", "null") != "null") {
+                        Console.WriteLine(e.InnerText);
+                    }
                 }
                 
                 
