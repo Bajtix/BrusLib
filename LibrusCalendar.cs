@@ -58,7 +58,7 @@ namespace BrusLib {
                     //Console.WriteLine(e.InnerHtml);
                     string url = e.GetAttributeValue("onclick", "null");
                     
-                    if (url != "null" || url.Contains("wolne")) { //ignorujemy zwolnienia nauczycieli - 1. są nieprzydatne, 2. zapychają łącze, 3.nie chce mi się ich robić
+                    if (url != "null" && !url.Contains("wolne")) { //ignorujemy zwolnienia nauczycieli - 1. są nieprzydatne, 2. zapychają łącze, 3.nie chce mi się ich robić
                         url = url.Split('\'')[1].Replace("'","");
                         var ce = new CalendarEvent(e.InnerText, "https://synergia.librus.pl" + url);
                         if (resultDictionary.ContainsKey(date)) {
