@@ -45,8 +45,11 @@ namespace BrusLib {
                 if(events == null) continue;
                 foreach (var e in events) {
                     //Console.WriteLine(e.InnerHtml);
-                    if (e.GetAttributeValue("onclick", "null") != "null") {
-                        Console.WriteLine(e.InnerText);
+                    string url = e.GetAttributeValue("onclick", "null");
+                    if (url != "null") {
+                        url = url.Split('\'')[1].Replace("'","");
+                        var ce = new CalendarEvent(e.InnerText, "https://synergia.librus.pl" + url);
+                        await ce.FetchInfo(connection);
                     }
                 }
                 

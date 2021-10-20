@@ -8,6 +8,9 @@ namespace BrusLib {
     public class CalendarEvent {
         public string Title { get; }
         public string Url { get; }
+        
+        public string Category { get; private set;}
+        public string Description { get; private set;}
 
         public DateTime StartsAt { get; private set; }
         public DateTime EndsAt { get; private set; }
@@ -29,36 +32,76 @@ namespace BrusLib {
 
             Dictionary<string, string> entries = new Dictionary<string, string>();
 
-            foreach (var row in rows) { // iterujemy przez wszystkie wiersze w tabeli i dzielimy ją na klucze i wartości
-                string key = row.SelectSingleNode("./th").InnerText;
-                string value = row.SelectSingleNode("./td").InnerText;
+            foreach (var row in rows.Skip(1)) { // iterujemy przez wszystkie wiersze w tabeli i dzielimy ją na klucze i wartości
+                if(!row.InnerHtml.Contains("th") || !row.InnerHtml.Contains("td")) continue;
+                string key = row.SelectSingleNode(".//th").InnerText;
+                string value = row.SelectSingleNode(".//td").InnerText;
                 entries.Add(key, value);
             }
+            Console.WriteLine("Sprawdzanie rzeczy");
 
             string day = "0000-01-01", lessonNo = "-1", timeFrame = "00:00 - 00:00"; // na podstawie danych próbujemy obliczyć przedział czasowy wydarzenia
-            DateTime date, startDate, endDate;
+            DateTime date = DateTime.MinValue, 
+                startDate = DateTime.MinValue, 
+                endDate = DateTime.MinValue;
             if (entries.TryGetValue("Data", out day)) {
+                Console.WriteLine("Zawiera datę");
                 date = DateTime.Parse(day);
             }
 
             if (entries.TryGetValue("Nr lekcji", out lessonNo)) {
+                Console.WriteLine("Zawiera nrlekcji");
                 int no = int.Parse(lessonNo);
                 if (lessonPeriods != null) {
                     var period = lessonPeriods.First(w => w.mark == no);
                     startDate = period.start;
                     endDate = period.end; // TODO: połącz dni z date z godzinami z tąd
+                    Console.WriteLine("From lesson no.");
                 }
             }
 
             if (entries.TryGetValue("Przedział czasu", out timeFrame)) {
+                Console.WriteLine("Zawiera przedział czasu");
                 string[] hours = timeFrame.Split('-');
-                string s = hours[0].Trim(); 
-                string e = hours[1].Trim();
+                string s = Util.DeHtmlify(hours[0].Trim()); 
+                string e = Util.DeHtmlify(hours[1].Trim());
                 startDate = DateTime.Parse(s);
-                endDate = DateTime.Parse(e); // TODO: połącz dni z date z godzinami z tąd
+                endDate = DateTime.Parse(e); 
+                Console.WriteLine("From hours");
+                startDate = DH(date, startDate);
+                endDate = DH(date, endDate);
             }
             
+            if (entries.TryGetValue("Godziny", out timeFrame)) {
+                Console.WriteLine("Zawiera przedział czasu");
+                string[] hours = timeFrame.Split('-');
+                string s = Util.DeHtmlify(hours[0].Trim()); 
+                string e = Util.DeHtmlify(hours[1].Trim());
+                startDate = DateTime.Parse(s);
+                endDate = DateTime.Parse(e); 
+                Console.WriteLine("From hours");
+                startDate = DH(date, startDate);
+                endDate = DH(date, endDate);
+            }
+
+            string description, type;
+
+            description = entries.TryGetValue("Opis", out description) ? description.Trim() : "???";
+            type = entries.TryGetValue("Rodzaj", out type) ? type.Trim() : "???";
+
+            //Console.WriteLine($"{type} : {description.Trim()} | {startDate} - {endDate}");
+
+            StartsAt = startDate;
+            EndsAt = endDate;
+
+            Description = description;
+            Category = type;
+
             // TODO: reszta właściwości
+        }
+
+        private static DateTime DH(DateTime d, DateTime h) {
+            return new DateTime(d.Year, d.Month, d.Day, h.Hour, h.Minute, h.Second);
         }
     }
 }
