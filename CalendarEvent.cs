@@ -11,6 +11,8 @@ namespace BrusLib {
         
         public string Category { get; private set;}
         public string Description { get; private set;}
+        
+        public string TimePeriodText { get; private set;}
 
         public DateTime StartsAt { get; private set; }
         public DateTime EndsAt { get; private set; }
@@ -90,6 +92,8 @@ namespace BrusLib {
 
             StartsAt = startDate;
             EndsAt = endDate;
+
+            TimePeriodText = $"{startDate:HH:mm} - {endDate:HH:mm}";
 
             Description = description;
             Category = type;

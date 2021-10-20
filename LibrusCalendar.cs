@@ -8,9 +8,9 @@ namespace BrusLib {
     public class LibrusCalendar {
         private const string requestUrl = "https://synergia.librus.pl/terminarz";
 
-        public Dictionary<DateTime, CalendarEvent> events;
+        public Dictionary<DateTime, List<CalendarEvent>> events;
 
-        private LibrusCalendar(Dictionary<DateTime, CalendarEvent> events) {
+        private LibrusCalendar(Dictionary<DateTime, List<CalendarEvent>> events) {
             this.events = events;
         }
 
@@ -43,21 +43,28 @@ namespace BrusLib {
             var tableNode = document.SelectSingleNode("/html/body/div[3]/div[3]/form/div/div/div/table");
             var days = tableNode.SelectNodes(".//div[@class=\"kalendarz-dzien\"]");
 
-            var resultDictionary = new Dictionary<DateTime, CalendarEvent>();
+            var resultDictionary = new Dictionary<DateTime, List<CalendarEvent>>();
+
+            
             
             foreach (var d in days) {
                 var day = d.SelectSingleNode("./div[@class=\"kalendarz-numer-dnia\"]");
                 var events = d.SelectNodes(".//td");
+                var date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, int.Parse(day.InnerText));
+                resultDictionary.Add(date, new List<CalendarEvent>());
                 
                 if(events == null) continue;
                 foreach (var e in events) {
                     //Console.WriteLine(e.InnerHtml);
                     string url = e.GetAttributeValue("onclick", "null");
-                    var date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, int.Parse(day.InnerText));
-                    if (url != "null") {
+                    
+                    if (url != "null" || url.Contains("wolne")) { //ignorujemy zwolnienia nauczycieli - 1. są nieprzydatne, 2. zapychają łącze, 3.nie chce mi się ich robić
                         url = url.Split('\'')[1].Replace("'","");
                         var ce = new CalendarEvent(e.InnerText, "https://synergia.librus.pl" + url);
-                        resultDictionary.Add(date, ce);
+                        if (resultDictionary.ContainsKey(date)) {
+                            resultDictionary[date].Add(ce);
+                        } else
+                            resultDictionary.Add(date, new List<CalendarEvent>(){ce}); // shouldnt happen
                     }
                 }
                 
