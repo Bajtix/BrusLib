@@ -11,6 +11,8 @@ namespace BrusLib {
         
         public string Category { get; private set;}
         public string Description { get; private set;}
+        public string Subject { get; private set;}
+        public string Teacher { get; private set;}
         
         public string TimePeriodText { get; private set;}
 
@@ -84,10 +86,12 @@ namespace BrusLib {
                 endDate = DayHour(date, endDate);
             }
 
-            string description, type;
+            string description, type, subject, teacher;
 
             description = entries.TryGetValue("Opis", out description) ? description.Trim() : "???";
             type = entries.TryGetValue("Rodzaj", out type) ? type.Trim() : "???";
+            subject = entries.TryGetValue("Przedmiot", out subject) ? subject.Trim() : "???";
+            teacher = entries.TryGetValue("Nauczyciel", out teacher) ? teacher.Trim() : "???";
             
 
             StartsAt = startDate;
@@ -97,6 +101,8 @@ namespace BrusLib {
 
             Description = description;
             Category = type;
+            Subject = subject;
+            Teacher = teacher;
 
             // TODO: reszta właściwości
         }
