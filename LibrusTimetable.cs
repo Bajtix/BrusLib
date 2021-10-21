@@ -13,6 +13,10 @@ namespace BrusLib {
 
         public List<TimePeriod> timePeriods;
 
+        public List<string> weekOptions;
+
+        private string requestKey;
+
         public SchoolDay[] week;
 
         private const string requestUrl = "https://synergia.librus.pl/przegladaj_plan_lekcji";
@@ -20,6 +24,12 @@ namespace BrusLib {
         public LibrusTimetable(List<TimePeriod> timePeriods, SchoolDay[] week) {
             this.timePeriods = timePeriods;
             this.week = week;
+        }
+
+        public async Task GetWeek(LibrusConnection connection, string week) {
+            var request = Util.GetRequest(requestUrl, ref connection.cookieSession, true, requestUrl);
+            Util.MakePostRequest(ref request, "");
+            request.GetResponse();
         }
 
         public static async Task<LibrusTimetable> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none) { // TODO: this code is unmanageable. Please, rewrite it.
@@ -114,6 +124,9 @@ namespace BrusLib {
                 r++;
                 days.Add(new SchoolDay(d, Util.GetFirstDayOfWeek(DateTime.Now, CultureInfo.InvariantCulture).AddDays(r)) );
             }
+
+            string requestKey = document.SelectSingleNode("//input[@name=\"requestkey\"]")
+                .GetAttributeValue("value", "");
 
             return new LibrusTimetable(timePeriods, days.ToArray());
         }

@@ -18,39 +18,8 @@ namespace BrusLib {
                 this.occured = occured;
             }
         }
-        /// <summary>
-        /// Sets the common headers for all web requests
-        /// </summary>
-        /// <param name="request">A reference to the web request</param>
-        private static void SetDefaultHeaders(ref HttpWebRequest request) {
-            request.KeepAlive = true;
-            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/93.0";
-            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8";
-            request.Headers.Add("Sec-Fetch-Dest","document");
-            request.Headers.Add("Sec-Fetch-Mode","navigate");
-            request.Headers.Add("Sec-Fetch-Site","same-site");
-            request.Headers.Add("Sec-Fetch-User","?1");
-            request.Headers.Add("Sec-GPS", "1");
-            request.Headers.Add("DNT", "1");
-        }
-
-        /// <summary>
-        /// Creates a request in an elegant way
-        /// </summary>
-        /// <param name="url">Request url</param>
-        /// <param name="cookies">A reference to the cookie container of the session</param>
-        /// <param name="setDefaultHeaders">Shall the function set the def. headers?</param>
-        /// <param name="referer">Setter for the commonly used referer header.</param>
-        /// <returns>The created HttpWebRequest</returns>
-        public static HttpWebRequest GetRequest(string url, ref CookieContainer cookies,  bool setDefaultHeaders = true, string referer = "") {
-            var wr = WebRequest.CreateHttp(url);
-            wr.CookieContainer = cookies;
-            
-            if(referer != "") wr.Referer = referer;
-            if(setDefaultHeaders) SetDefaultHeaders(ref wr);
-            return wr;
-        }
         
+
         /// <summary>
         /// Retrieves the response stream from WebResponse
         /// </summary>
@@ -73,24 +42,6 @@ namespace BrusLib {
             string r = w.DocumentNode.SelectSingleNode("//iframe[@id=\"caLoginIframe\"]").GetAttributeValue("src", "ERROR");
             if (r == "ERROR") throw new Exception("Failed getting Iframe code - can't find");
             return r;
-        }
-        
-        /// <summary>
-        /// Makes the WebRequest into a POST type request with specified content
-        /// </summary>
-        /// <param name="request">A reference to the request</param>
-        /// <param name="content">The content to write</param>
-        private static void MakePostRequest(ref HttpWebRequest request, string content) {
-            byte[] data = Encoding.UTF8.GetBytes(content);
-            
-            request.Method = WebRequestMethods.Http.Post;
-            request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-            request.ContentLength = data.Length;
-            request.Accept = "*/*";
-            
-            Stream str = request.GetRequestStream();
-            str.Write(data, 0, data.Length);
-            str.Close();
         }
 
         /// <summary>
@@ -121,7 +72,7 @@ namespace BrusLib {
             // Step 1
             // gets the iframe code
             try {
-                request = GetRequest("https://portal.librus.pl/rodzina/synergia/loguj", ref connection.cookieSession,
+                request = Util.GetRequest("https://portal.librus.pl/rodzina/synergia/loguj", ref connection.cookieSession,
                     true, "https://portal.librus.pl/rodzina");
                 response = request.GetResponse();
             }
@@ -139,7 +90,7 @@ namespace BrusLib {
             // gets us the Auth Referer url and go there
             string iframeCode = GetIframeCode(GetResponseBody(response));
             try {
-                request = GetRequest(iframeCode, ref connection.cookieSession, true,
+                request = Util.GetRequest(iframeCode, ref connection.cookieSession, true,
                     "https://portal.librus.pl/rodzina");
                 response = request.GetResponse();
                 referer = response.ResponseUri.ToString();
@@ -156,9 +107,9 @@ namespace BrusLib {
             // Step 3
             // Greet the captcha (the system they use is kinda dumb - to trick it, we first send an empty username and then a filled one)
             try {
-                request = GetRequest("https://api.librus.pl/OAuth/Captcha", ref connection.cookieSession, true,
+                request = Util.GetRequest("https://api.librus.pl/OAuth/Captcha", ref connection.cookieSession, true,
                     referer);
-                MakePostRequest(ref request, "username=&is_needed=1");
+                Util.MakePostRequest(ref request, "username=&is_needed=1");
                 response = request.GetResponse();
             }
             catch (Exception e) {
@@ -176,9 +127,9 @@ namespace BrusLib {
             // Step 4
             // Feed the captcha
             try {
-                request = GetRequest("https://api.librus.pl/OAuth/Captcha", ref connection.cookieSession, true,
+                request = Util.GetRequest("https://api.librus.pl/OAuth/Captcha", ref connection.cookieSession, true,
                     referer);
-                MakePostRequest(ref request, $"username={username}&is_needed=1");
+                Util.MakePostRequest(ref request, $"username={username}&is_needed=1");
                 response = request.GetResponse();
             }
             catch (Exception e) {
@@ -195,8 +146,8 @@ namespace BrusLib {
             // finally, we send the credentials. This will get us some json - we care about the status part (check if its 'ok')
 
             try {
-                request = GetRequest(referer, ref connection.cookieSession, true, referer);
-                MakePostRequest(ref request, $"action=login&login={username}&pass={password}");
+                request = Util.GetRequest(referer, ref connection.cookieSession, true, referer);
+                Util.MakePostRequest(ref request, $"action=login&login={username}&pass={password}");
                 response = request.GetResponse();
             }
             catch (Exception e) {
@@ -216,7 +167,7 @@ namespace BrusLib {
             // Step 6
             // Now the server will send us some json back. We just have to follow to the next page
             try {
-                request = GetRequest(
+                request = Util.GetRequest(
                     referer.Replace("Authorization", "Authorization/Grant"),
                     ref connection.cookieSession, true, referer);
                 response = request.GetResponse();
