@@ -17,14 +17,10 @@ namespace BrusLib {
 
         private string requestKey;
 
-        public SchoolDay[] week;
+        public List<SchoolDay> week;
 
         private const string requestUrl = "https://synergia.librus.pl/przegladaj_plan_lekcji";
-
-        public LibrusTimetable(List<TimePeriod> timePeriods, SchoolDay[] week) {
-            this.timePeriods = timePeriods;
-            this.week = week;
-        }
+        
 
         public async Task GetWeek(LibrusConnection connection, string week) {
             var request = Util.GetRequest(requestUrl, ref connection.cookieSession, true, requestUrl);
@@ -33,6 +29,12 @@ namespace BrusLib {
         }
 
         public static async Task<LibrusTimetable> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none) { // TODO: this code is unmanageable. Please, rewrite it.
+            var w = new LibrusTimetable();
+            await w.Update(connection, bufferMode);
+            return w;
+        }
+
+        public async Task Update(LibrusConnection connection, APIBufferMode bufferMode) {
             string html = "";
 
             switch (bufferMode) {
@@ -61,10 +63,10 @@ namespace BrusLib {
             var table = document.SelectSingleNode("/html/body/div[1]/div/div/div/form/table[2]");
             var rows = table.SelectNodes(".//tr").Skip(1).Reverse().Skip(1).Reverse(); // wtf
 
-            List<TimePeriod> timePeriods = new List<TimePeriod>();
-            List<Lesson>[] week = new List<Lesson>[7];
+            timePeriods = new List<TimePeriod>();
+            List<Lesson>[] lessons = new List<Lesson>[7];
 
-            List<SchoolDay> days = new List<SchoolDay>();
+            week = new List<SchoolDay>();
 
             int unknownCounter = 0; // counts unknown periods (breaks and other ones possibly)
 
@@ -93,7 +95,7 @@ namespace BrusLib {
                 for (int i = 0; i < 7; i++) {
                     DateTime day = Util.GetFirstDayOfWeek(DateTime.Today, CultureInfo.InvariantCulture).AddDays(i);
                     
-                    if (week[i] == null) week[i] = new List<Lesson>();
+                    if (lessons[i] == null) lessons[i] = new List<Lesson>();
                     var nnn = item.SelectNodes("./*")[i + 2];
                     snw = nnn.InnerText;
                     snw = Util.DeHtmlify(snw);
@@ -103,7 +105,7 @@ namespace BrusLib {
                     var starthour = timePeriods.Last().start;
                     var endhour = timePeriods.Last().end;
                     if (snw == " " || snw == "") {
-                        week[i].Add(new Lesson("", "", false, false, starthour, endhour, timePeriods.Last().mark));
+                        lessons[i].Add(new Lesson("", "", false, false, starthour, endhour, timePeriods.Last().mark));
                         continue;
                     }
 
@@ -111,7 +113,7 @@ namespace BrusLib {
                     
                     DateTime startDateTime = day.AddHours(starthour.Hour).AddMinutes(starthour.Minute);
                     DateTime endDateTime = day.AddHours(endhour.Hour).AddMinutes(endhour.Minute);
-                    week[i].Add(new Lesson(
+                    lessons[i].Add(new Lesson(
                         Util.DeHtmlify(nnn.SelectSingleNode(".//b").InnerText.Trim()).Replace("\n",""), 
                         tc.Trim(), rep, can, startDateTime, endDateTime,
                         timePeriods.Last().mark));
@@ -120,15 +122,13 @@ namespace BrusLib {
             }
 
             int r = 0;
-            foreach (var d in week) {
+            foreach (var d in lessons) {
                 r++;
-                days.Add(new SchoolDay(d, Util.GetFirstDayOfWeek(DateTime.Now, CultureInfo.InvariantCulture).AddDays(r)) );
+                week.Add(new SchoolDay(d, Util.GetFirstDayOfWeek(DateTime.Now, CultureInfo.InvariantCulture).AddDays(r)) );
             }
 
-            string requestKey = document.SelectSingleNode("//input[@name=\"requestkey\"]")
+            requestKey = document.SelectSingleNode("//input[@name=\"requestkey\"]")
                 .GetAttributeValue("value", "");
-
-            return new LibrusTimetable(timePeriods, days.ToArray());
         }
         
         
