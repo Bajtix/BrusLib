@@ -13,9 +13,7 @@ namespace BrusLib {
 
         public List<TimePeriod> timePeriods;
 
-        public List<string> weekOptions;
-
-        private string requestKey;
+        public List<string> weekOptions; // unused
 
         public List<SchoolDay> week;
 
@@ -24,22 +22,27 @@ namespace BrusLib {
 
         public async Task GetWeek(LibrusConnection connection, string week) {
             var request = Util.GetRequest(requestUrl, ref connection.cookieSession, true, requestUrl);
-            Util.MakePostRequest(ref request, "");
-            request.GetResponse();
+            Util.MakePostRequest(ref request, $"requestkey=0&tydzien={week}&pokaz_zajecia_zsk=on&pokaz_zajecia_ni=on");
+            var response = request.GetResponse();
+            
+            File.WriteAllText("debug tt2.htm",LibrusAuth.GetResponseBody(response));
         }
 
-        public static async Task<LibrusTimetable> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none) { // TODO: this code is unmanageable. Please, rewrite it.
-            var w = new LibrusTimetable();
-            await w.Update(connection, bufferMode);
-            return w;
+        public LibrusTimetable(List<TimePeriod> timePeriods, List<SchoolDay> week) {
+            this.timePeriods = timePeriods;
+            this.week = week;
         }
 
-        public async Task Update(LibrusConnection connection, APIBufferMode bufferMode) {
+        public static async Task<LibrusTimetable> Retrieve(LibrusConnection connection, APIBufferMode bufferMode = APIBufferMode.none, string gWeek="") { 
             string html = "";
 
             switch (bufferMode) {
                 case APIBufferMode.none:
-                    html = await Util.FetchAsync(requestUrl, connection.cookieSession,
+                    if (gWeek != "")
+                        html = await Util.FetchAsyncPost(requestUrl, connection.cookieSession, requestUrl,
+                            $"requestkey=0&tydzien={gWeek}&pokaz_zajecia_zsk=on&pokaz_zajecia_ni=on");
+                    else
+                        html = await Util.FetchAsync(requestUrl, connection.cookieSession,
                         Util.SYNERGIA_INDEX);
                     break;
                 case APIBufferMode.load:
@@ -50,8 +53,12 @@ namespace BrusLib {
                     else
                         goto case APIBufferMode.save;
                 case APIBufferMode.save:
-                    html = await Util.FetchAsync(requestUrl, connection.cookieSession,
-                        Util.SYNERGIA_INDEX);
+                    if (gWeek != "")
+                        html = await Util.FetchAsyncPost(requestUrl, connection.cookieSession, requestUrl,
+                            $"requestkey=0&tydzien={gWeek}&pokaz_zajecia_zsk=on&pokaz_zajecia_ni=on");
+                    else
+                        html = await Util.FetchAsync(requestUrl, connection.cookieSession,
+                            Util.SYNERGIA_INDEX);
                     File.WriteAllText("buffer_tt", html);
                     break;
             }
@@ -63,12 +70,14 @@ namespace BrusLib {
             var table = document.SelectSingleNode("/html/body/div[1]/div/div/div/form/table[2]");
             var rows = table.SelectNodes(".//tr").Skip(1).Reverse().Skip(1).Reverse(); // wtf
 
-            timePeriods = new List<TimePeriod>();
+            List <TimePeriod> timePeriods = new List<TimePeriod>();
             List<Lesson>[] lessons = new List<Lesson>[7];
 
-            week = new List<SchoolDay>();
+            List<SchoolDay> week = new List<SchoolDay>();
 
             int unknownCounter = 0; // counts unknown periods (breaks and other ones possibly)
+
+            DateTime firstDayOfCurrentWeek = gWeek == "" ? Util.GetFirstDayOfWeek(DateTime.Today, CultureInfo.InvariantCulture) : GetFirstDayFromGetWeek(gWeek);
 
             foreach (var item in rows) {
                 var hrNode = item.SelectSingleNode("./*[2]");
@@ -93,7 +102,7 @@ namespace BrusLib {
 
                 string snw = ""; // TODO: please, rewrite this nicely
                 for (int i = 0; i < 7; i++) {
-                    DateTime day = Util.GetFirstDayOfWeek(DateTime.Today, CultureInfo.InvariantCulture).AddDays(i);
+                    DateTime day = firstDayOfCurrentWeek.AddDays(i);
                     
                     if (lessons[i] == null) lessons[i] = new List<Lesson>();
                     var nnn = item.SelectNodes("./*")[i + 2];
@@ -124,14 +133,16 @@ namespace BrusLib {
             int r = 0;
             foreach (var d in lessons) {
                 r++;
-                week.Add(new SchoolDay(d, Util.GetFirstDayOfWeek(DateTime.Now, CultureInfo.InvariantCulture).AddDays(r)) );
+                week.Add(new SchoolDay(d, firstDayOfCurrentWeek.AddDays(r)) );
             }
 
-            requestKey = document.SelectSingleNode("//input[@name=\"requestkey\"]")
-                .GetAttributeValue("value", "");
+
+            return new LibrusTimetable(timePeriods, week);
         }
-        
-        
-        
+
+        private static DateTime GetFirstDayFromGetWeek(string gWeek) {
+            string firstDay = gWeek.Split('_')[0];
+            return Util.GetFirstDayOfWeek(DateTime.Parse(firstDay),CultureInfo.InvariantCulture);
+        }
     }
 }

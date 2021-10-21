@@ -20,6 +20,13 @@ namespace BrusLib {
             return LibrusAuth.GetResponseBody(response);
         }
         
+        public static async Task<string> FetchAsyncPost(string url, CookieContainer cookies, string referer, string post) {
+            var request = GetRequest(url, ref cookies, true, referer);
+            MakePostRequest(ref request, post);
+            var response = await request.GetResponseAsync();
+            return LibrusAuth.GetResponseBody(response);
+        }
+        
         public static string Fetch(string url, ref CookieContainer cookies, string referer) {
             var request = GetRequest(url, ref cookies, true, referer);
             return LibrusAuth.GetResponseBody(request.GetResponse());
