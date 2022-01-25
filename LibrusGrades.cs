@@ -25,8 +25,7 @@ namespace BrusLib {
                     if (File.Exists("buffer_grades")) {
                         html = File.ReadAllText("buffer_grades");
                         break;
-                    }
-                    else
+                    } else
                         goto case APIBufferMode.save;
 
                 case APIBufferMode.save:
@@ -35,7 +34,7 @@ namespace BrusLib {
                     File.WriteAllText("buffer_grades", html);
                     break;
             }
-            
+
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
             var document = doc.DocumentNode;
@@ -43,13 +42,13 @@ namespace BrusLib {
             var lines = document.SelectNodes("/html/body/div[3]/div[3]/form[1]/div/div/table/tr"); // get grade table
             List<Subject> subjects = lines
                 .Where((c, i) => i % 2 == 0) // select every other element - odd ones are just dumb copies
-                .Select(line => 
+                .Select(line =>
                     new Subject(
-                        line.SelectSingleNode("./td[2]").InnerText.Trim(), 
-                        GetGrades(line.SelectSingleNode("./td[3]")), 
-                        GetGrades(line.SelectSingleNode("./td[4]"))))
+                        line.SelectSingleNode("./td[2]").InnerText.Trim(),
+                        GetGrades(line.SelectSingleNode("./td[3]")),
+                        GetGrades(line.SelectSingleNode("./td[7]"))))
                 .ToList();
-            
+
             return new LibrusGrades(subjects, DateTime.Now);
         }
 
@@ -57,23 +56,24 @@ namespace BrusLib {
             this.subjects = subjects;
             this.lastFetched = lastFetched;
         }
-        
+
         private static Grade[] GetGrades(HtmlNode tableRow) {
+            if (tableRow == null) return Array.Empty<Grade>();
             var grades = tableRow.SelectNodes(".//a[@class=\"ocena\"]");
-            if(grades == null || grades.Count == 0) return Array.Empty<Grade>();
+            if (grades == null || grades.Count == 0) return Array.Empty<Grade>();
 
             List<Grade> gs = new List<Grade>();
             foreach (var item in grades) {
-                if(item.InnerText.Trim() == String.Empty) continue;
+                if (item.InnerText.Trim() == String.Empty) continue;
                 gs.Add(new Grade(
                     item.InnerText,
                     ColorFromStyle(item.ParentNode.GetAttributeValue("style", "background-color: rgb(255,0,255);")),
-                    Util.DeHtmlify(item.GetAttributeValue("title","Error Fetching"))));
+                    Util.DeHtmlify(item.GetAttributeValue("title", "Error Fetching"))));
             }
 
             return gs.ToArray();
         }
-        
+
         private static Color ColorFromStyle(string style) {
             /*style = style.Substring(style.IndexOf("(") + 1, style.IndexOf(")") - style.IndexOf("(") - 1);
             
@@ -81,7 +81,7 @@ namespace BrusLib {
             
             return Color.FromArgb(int.Parse(w[0]),int.Parse(w[1]),int.Parse(w[2]));*/
 
-            return ColorFromHex(style.Split(':')[1].Replace(";","").Trim());
+            return ColorFromHex(style.Split(':')[1].Replace(";", "").Trim());
         }
 
         private static Color ColorFromHex(string hex) {
