@@ -8,6 +8,19 @@
             this.grades1 = grades1;
             this.grades2 = grades2;
         }
+
+        public override bool Equals(object obj) {
+            if (obj == null) return false;
+            if (obj.GetType() != this.GetType()) return false;
+            return ((Subject)obj).name == this.name;
+        }
         
+        public static bool operator == (Subject a, Subject b) {
+            return a.Equals(b);
+        }
+        
+        public static bool operator != (Subject a, Subject b) {
+            return !(a == b);
+        }
     }
 }
