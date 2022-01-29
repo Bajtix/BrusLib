@@ -18,6 +18,8 @@ namespace BrusLib {
                 this.occured = occured;
             }
         }
+
+        public static float delayMultiplier = 1;
         
 
         /// <summary>
@@ -122,7 +124,7 @@ namespace BrusLib {
             
             
             // We need to wait here (i think, sometimes it wouldn't work otherwise, which makes sense - a user wouldn't type his password in just a few ms)
-            await Task.Delay(100);
+            await Task.Delay((int)(100 * delayMultiplier));
             
             // Step 4
             // Feed the captcha
@@ -140,7 +142,7 @@ namespace BrusLib {
             eventHandler.Invoke(null, new AuthEvent("Step 4 : Feed the captcha", null, DateTime.Now));
 
 
-            await Task.Delay(100);
+            await Task.Delay((int)(100 * delayMultiplier));
             
             // Step 5
             // finally, we send the credentials. This will get us some json - we care about the status part (check if its 'ok')
