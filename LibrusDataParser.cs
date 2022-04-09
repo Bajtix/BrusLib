@@ -1,7 +1,6 @@
 namespace BrusLib2;
 
 using System;
-using System.Drawing;
 using HtmlAgilityPack;
 using System.Linq;
 using System.Collections.Generic;
@@ -26,8 +25,7 @@ public static class LibrusDataParser {
             if (gradeNodes == null) continue; // if we have no grades, ignore the subject
 
             var gradesList = new List<Grade>();
-            foreach (var gradeNode in gradeNodes)
-                gradesList.Add(ParseHTMLGrade(subject, gradeNode));
+            foreach (var gradeNode in gradeNodes) if (ParseHTMLGrade(subject, gradeNode) is Grade grade) gradesList.Add(grade!); //ellegant. Thanks, copilot.
             subject.grades = gradesList.ToArray();
 
             subjects.Add(subject);

@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
@@ -23,21 +22,25 @@ public class LibrusDataProvider : DataProvider {
 
     // TODO: error handling
     public override async Task<bool> Login(string username, string password) {
-        //step 1: get the client code from the frame
-        var iframeCode = GetIframeSource(
-            (await m_web.SendGetRequest("https://portal.librus.pl/rodzina/synergia/loguj", "https://portal.librus.pl/rodzina"))
-            .GetResponseBody()
-        ); // TODO: probably needs to be async.
+
+        // step 1: get the client code from the frame
+        // var iframeCode = GetIframeSource(
+        //     (await m_web.SendGetRequest("https://portal.librus.pl/rodzina/synergia/loguj", "https://portal.librus.pl/rodzina"))
+        //     .GetResponseBody()
+        // ); 
+        // we can skip step 1 :)
+
+        var iframeCode = "https://synergia.librus.pl/loguj/portalRodzina?v=1649532133";
 
         var authRefererUri = m_web.GetRequest(iframeCode, "https://portal.librus.pl/rodzina").GetResponse().ResponseUri.ToString();
 
-        // greet the captcha
-        await m_web.SendPostRequest("https://api.librus.pl/OAuth/Captcha", "username=&is_needed=1", authRefererUri);
-
-        await Task.Delay(10);
+        // step 2: greet the captcha
+        // await m_web.SendPostRequest("https://api.librus.pl/OAuth/Captcha", "username=&is_needed=1", authRefererUri);
+        // we can skip step 2 :)
 
         // feed the captcha
-        await m_web.SendPostRequest("https://api.librus.pl/OAuth/Captcha", $"username={username}&is_needed=1", authRefererUri);
+        //await m_web.SendPostRequest("https://api.librus.pl/OAuth/Captcha", $"username={username}&is_needed=1", authRefererUri);
+        // we can skip step 3 as well. the captcha is worthless...
 
         var finalResponse = (await m_web.SendPostRequest(authRefererUri, $"action=login&login={username}&pass={password}", authRefererUri)).GetResponseBody(); // !!! if the password was incorrect, this throws 403
 
@@ -55,7 +58,6 @@ public class LibrusDataProvider : DataProvider {
 
     public override async Task<Subject[]> FetchSubjectsGrades() {
         if (!IsSessionValid) throw new SessionExpiredException(m_sessionValidity);
-
         var html = (await m_web.SendGetRequest("https://synergia.librus.pl/przegladaj_oceny/uczen")).GetResponseBody();
 
         return LibrusDataParser.ParseHTMLSubjects(html);
