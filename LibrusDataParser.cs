@@ -7,6 +7,8 @@ using System.Collections.Generic;
 
 public static class LibrusDataParser {
     public static Subject[] ParseHTMLSubjects(string html) { // TODO: refactor this, so it has a similar structure to ParseHTMLGrade
+        var stopwatch = new System.Diagnostics.Stopwatch();
+
         var doc = new HtmlDocument();
         doc.LoadHtml(html);
 
@@ -30,7 +32,6 @@ public static class LibrusDataParser {
 
             subjects.Add(subject);
         }
-
 
         return subjects.ToArray();
     }

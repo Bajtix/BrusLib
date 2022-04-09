@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
@@ -42,7 +43,16 @@ public class LibrusDataProvider : DataProvider {
         //await m_web.SendPostRequest("https://api.librus.pl/OAuth/Captcha", $"username={username}&is_needed=1", authRefererUri);
         // we can skip step 3 as well. the captcha is worthless...
 
-        var finalResponse = (await m_web.SendPostRequest(authRefererUri, $"action=login&login={username}&pass={password}", authRefererUri)).GetResponseBody(); // !!! if the password was incorrect, this throws 403
+        string finalResponse = "";
+        try {
+            finalResponse = (await m_web.SendPostRequest(authRefererUri, $"action=login&login={username}&pass={password}", authRefererUri)).GetResponseBody(); // !!! if the password was incorrect, this throws 403
+        } catch (WebException c) {
+            var htrp = (c.Response! as HttpWebResponse)!;
+            if (htrp == null) return false;
+            if (htrp.StatusCode == HttpStatusCode.Forbidden) {
+                return false;
+            }
+        }
 
         var response = JsonConvert.DeserializeObject<dynamic>(finalResponse);
         if (response == null) return false;

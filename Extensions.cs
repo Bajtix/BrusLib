@@ -9,6 +9,8 @@ public static class Extensions {
         var sr = new StreamReader(r.GetResponseStream());
         string body = sr.ReadToEnd();
         sr.Close();
+
+        r.Close();
         return body;
     }
 }

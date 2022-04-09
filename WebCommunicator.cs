@@ -25,12 +25,17 @@ public class WebCommunicator {
         request.Headers = m_headers;
         if (!string.IsNullOrWhiteSpace(referer)) request.Referer = referer;
         m_lastRequest = request; // this will just make it easier to use later, as we don't need to store the last request all the time
+        request.Proxy = null;
+        request.ServicePoint.Expect100Continue = false;
+        request.ServicePoint.UseNagleAlgorithm = false;
+
         return request;
     }
 
     public async Task<HttpWebResponse> SendGetRequest(string url, string referer = "", bool setDefaultHeaders = true) {
         var request = GetRequest(url, referer, setDefaultHeaders);
         return (HttpWebResponse)await request.GetResponseAsync();
+
     }
 
     public HttpWebRequest PostRequest(string url, string content, string referer = "", bool setDefaultHeaders = true) {

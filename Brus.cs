@@ -7,14 +7,23 @@ namespace BrusLib2 {
     public class Brus {
         private DataProvider m_dataProvider;
 
+        private Subject[]? m_subjects;
+
 
         public Brus(DataProvider dataProvider) {
             m_dataProvider = dataProvider;
         }
 
-        public async Task<bool> Login(string login, string password) => await m_dataProvider.Login(login, password);
+        public async Task<bool> Login(string login, string password) {
+            return await m_dataProvider.Login(login, password);
+        }
 
-        public async Task<Subject[]> GetSubjectsGrades() => await m_dataProvider.FetchSubjectsGrades();
+        public async Task<Subject[]> GetSubjectsGrades(bool forceRefetch = false) {
+            if (m_subjects == null || forceRefetch) {
+                m_subjects = await m_dataProvider.FetchSubjectsGrades();
+            }
+            return m_subjects;
+        }
 
 
 
