@@ -14,6 +14,8 @@ namespace BrusLib2 {
 
         public async Task<bool> Login(string login, string password) => await m_dataProvider.Login(login, password);
 
+        public async Task<Subject[]> GetSubjectsGrades() => await m_dataProvider.FetchSubjectsGrades();
+
 
 
         //this class will be our way to store the data from the session, ex. the grades and timetable events.
