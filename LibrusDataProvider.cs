@@ -1,4 +1,6 @@
+using System;
 using System.Threading;
+using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 
@@ -18,34 +20,33 @@ namespace BrusLib2 {
             return iframeSource;
         }
 
-        public override bool Login(string username, string password) {
+        public override async Task<bool> Login(string username, string password) {
             //step 1: get the client code from the frame
             var iframeCode = GetIframeSource(
-                m_web.GetRequest("https://portal.librus.pl/rodzina/synergia/loguj", "https://portal.librus.pl/rodzina")
-                .GetResponse()
+                (await m_web.SendGetRequest("https://portal.librus.pl/rodzina/synergia/loguj", "https://portal.librus.pl/rodzina"))
                 .GetResponseBody()
             ); // TODO: probably needs to be async.
 
             var authRefererUri = m_web.GetRequest(iframeCode, "https://portal.librus.pl/rodzina").GetResponse().ResponseUri.ToString();
 
             // greet the captcha
-            m_web.PostRequest("https://api.librus.pl/OAuth/Captcha", "username=&is_needed=1", authRefererUri).GetResponse();
+            await m_web.SendPostRequest("https://api.librus.pl/OAuth/Captcha", "username=&is_needed=1", authRefererUri);
 
-            Thread.Sleep(10);
+            await Task.Delay(10);
 
             // feed the captcha
-            m_web.PostRequest("https://api.librus.pl/OAuth/Captcha", $"username={username}&is_needed=1", authRefererUri).GetResponse();
+            await m_web.SendPostRequest("https://api.librus.pl/OAuth/Captcha", $"username={username}&is_needed=1", authRefererUri);
 
-            var finalResponse = m_web.PostRequest(authRefererUri, $"action=login&login={username}&pass={password}", authRefererUri).GetResponse().GetResponseBody();
+            var finalResponse = (await m_web.SendPostRequest(authRefererUri, $"action=login&login={username}&pass={password}", authRefererUri)).GetResponseBody();
 
             var response = JsonConvert.DeserializeObject<dynamic>(finalResponse);
             if (response == null) return false;
-            if (!response!.status)
-                return false;
-            if (response!.status != "ok")
+            if (response.status != "ok")
                 return false;
 
-            m_web.GetRequest(authRefererUri.Replace("Authorization", "Authorization/Grant"), authRefererUri).GetResponse();
+            await m_web.SendGetRequest(authRefererUri.Replace("Authorization", "Authorization/Grant"), authRefererUri);
+
+            m_sessionValidity = DateTime.Now.AddMinutes(30);
 
             return true;
         }

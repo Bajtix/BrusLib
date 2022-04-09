@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace BrusLib2 {
 
@@ -11,7 +12,7 @@ namespace BrusLib2 {
             m_dataProvider = dataProvider;
         }
 
-        public bool Login(string login, string password) => m_dataProvider.Login(login, password);
+        public async Task<bool> Login(string login, string password) => await m_dataProvider.Login(login, password);
 
 
 
