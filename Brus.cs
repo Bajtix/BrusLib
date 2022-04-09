@@ -1,0 +1,21 @@
+using System;
+
+namespace BrusLib2 {
+
+    // this class serves as a data container for a session.
+    public class Brus {
+        private DataProvider m_dataProvider;
+
+
+        public Brus(DataProvider dataProvider) {
+            m_dataProvider = dataProvider;
+        }
+
+        public bool Login(string login, string password) => m_dataProvider.Login(login, password);
+
+
+
+        //this class will be our way to store the data from the session, ex. the grades and timetable events.
+    }
+
+}
