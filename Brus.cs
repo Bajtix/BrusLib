@@ -25,6 +25,8 @@ namespace BrusLib2 {
             return m_subjects;
         }
 
+        public bool IsSessionValid => m_dataProvider.IsSessionValid;
+
 
 
         //this class will be our way to store the data from the session, ex. the grades and timetable events.

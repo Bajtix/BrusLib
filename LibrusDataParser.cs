@@ -13,7 +13,7 @@ public static class LibrusDataParser {
         doc.LoadHtml(html);
 
         var table = doc.DocumentNode.SelectSingleNode("/html/body/div[3]/div[3]/form[1]/div/div/table");
-        var rows = table.SelectNodes("./tr"); // maybe get only the even rows? add .Where((c, i) => i % 2 == 0)
+        var rows = table.SelectNodes("./tr").Where((c,i)=>i%2==0); // maybe get only the even rows? add .Where((c, i) => i % 2 == 0)
 
         var subjects = new List<Subject>();
 
@@ -23,14 +23,18 @@ public static class LibrusDataParser {
             string subjectName = cells[1].InnerText;
             if (subjects.Any(s => s.name == subjectName)) continue; // skip subject if exists
             var subject = new Subject(subjectName);
-            var gradeNodes = cells[2].SelectNodes("./span");
-            if (gradeNodes == null) continue; // if we have no grades, ignore the subject
+            int period = 1;
 
-            var gradesList = new List<Grade>();
-            foreach (var gradeNode in gradeNodes) if (ParseHTMLGrade(subject, gradeNode) is Grade grade) gradesList.Add(grade!); //ellegant. Thanks, copilot.
-            subject.grades = gradesList.ToArray();
+            for (period = 2; period <= 2; period++) { // in theory we can support multiple periods
+                var gradeNodes = cells[2 + (period - 1) * 4].SelectNodes("./span");
+                if (gradeNodes == null) continue; // if we have no grades, ignore the subject
 
-            subjects.Add(subject);
+                var gradesList = new List<Grade>();
+                foreach (var gradeNode in gradeNodes) if (ParseHTMLGrade(subject, gradeNode) is Grade grade) gradesList.Add(grade!); //ellegant. Thanks, copilot.
+                subject.grades = gradesList.ToArray();
+
+                subjects.Add(subject);
+            }
         }
 
         return subjects.ToArray();
@@ -43,6 +47,8 @@ public static class LibrusDataParser {
         var info = infoNode.GetAttributeValue("title", "null").HTMLReformatLineBreaks().Split('\n');
         var grade = new Grade(html.InnerText.HTMLRemoveTags().Trim(), sub);
 
+        
+
         foreach (var infoPart in info) {
             if (!infoPart.Contains(":")) continue;
             var key = infoPart.Split(':')[0].Trim();
@@ -50,7 +56,7 @@ public static class LibrusDataParser {
 
             switch (key) {
                 case "Ocena":
-                    grade.value = val;
+                    //grade.value = val; // disable for short names.
                     break;
                 case "Kategoria":
                     grade.category = val.HTMLRemoveTags();

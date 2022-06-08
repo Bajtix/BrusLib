@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Text.RegularExpressions;
 
 namespace BrusLib2;
 
@@ -30,5 +31,19 @@ public class Grade {
         this.addedDate = addedDate;
         this.weight = weight;
         this.color = color;
+    }
+
+    public float? GetNumerical() {
+        int n;
+        Regex rx = new Regex("\\d");
+        if (rx.IsMatch(value)) { // it contains a number
+            if (!int.TryParse(rx.Match(value).Value, out n)) return null; // should not happen
+
+            if (value.Contains("+")) return n + 0.5f;
+            if (value.Contains("-")) return n - 0.33f;
+
+            return n; 
+        } 
+        return null;
     }
 }
